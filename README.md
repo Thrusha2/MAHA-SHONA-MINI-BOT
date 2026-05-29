@@ -1,65 +1,54 @@
-# pump
+<div align="center">
+  <img width="200" height="200"
+    src="https://s3.amazonaws.com/pix.iemoji.com/images/emoji/apple/ios-11/256/crayon.png">
+  <h1>@jimp/plugin-cover</h1>
+</div>
 
-pump is a small node module that pipes streams together and destroys all of them if one of them closes.
-
-```
-npm install pump
-```
-
-[![build status](http://img.shields.io/travis/mafintosh/pump.svg?style=flat)](http://travis-ci.org/mafintosh/pump)
-
-## What problem does it solve?
-
-When using standard `source.pipe(dest)` source will _not_ be destroyed if dest emits close or an error.
-You are also not able to provide a callback to tell when then pipe has finished.
-
-pump does these two things for you
+Scale the image so the given width and height keeping the aspect ratio. Some parts of the image may be clipped.
 
 ## Usage
 
-Simply pass the streams you want to pipe together to pump and add an optional callback
+- @param {number} w the width to resize the image to
+- @param {number} h the height to resize the image to
+- @param {number} alignBits (optional) A bitmask for horizontal and vertical alignment
+- @param {string} mode (optional) a scaling method (e.g. Jimp.RESIZE_BEZIER)
+- @param {function(Error, Jimp)} cb (optional) a callback for when complete
 
-``` js
-var pump = require('pump')
-var fs = require('fs')
+```js
+import jimp from 'jimp';
 
-var source = fs.createReadStream('/dev/random')
-var dest = fs.createWriteStream('/dev/null')
+async function main() {
+  const image = await jimp.read('test/image.png');
 
-pump(source, dest, function(err) {
-  console.log('pipe finished', err)
-})
+  image.cover(150, 100);
+}
 
-setTimeout(function() {
-  dest.destroy() // when dest is closed pump will destroy source
-}, 1000)
+main();
 ```
 
-You can use pump to pipe more than two streams together as well
+### Align modes
 
-``` js
-var transform = someTransformStream()
+The following constants can be passed to `image.cover`:
 
-pump(source, transform, anotherTransform, dest, function(err) {
-  console.log('pipe finished', err)
-})
+```js
+Jimp.HORIZONTAL_ALIGN_LEFT;
+Jimp.HORIZONTAL_ALIGN_CENTER;
+Jimp.HORIZONTAL_ALIGN_RIGHT;
+
+Jimp.VERTICAL_ALIGN_TOP;
+Jimp.VERTICAL_ALIGN_MIDDLE;
+Jimp.VERTICAL_ALIGN_BOTTOM;
 ```
 
-If `source`, `transform`, `anotherTransform` or `dest` closes all of them will be destroyed.
+For example:
 
-Similarly to `stream.pipe()`, `pump()` returns the last stream passed in, so you can do:
-
+```js
+image.cover(250, 250, Jimp.HORIZONTAL_ALIGN_LEFT | Jimp.VERTICAL_ALIGN_TOP);
+image.cover(250, 250, Jimp.HORIZONTAL_ALIGN_RIGHT | Jimp.VERTICAL_ALIGN_BOTTOM);
 ```
-return pump(s1, s2) // returns s2
+
+Default align mode for `image.cover` is:
+
+```js
+Jimp.HORIZONTAL_ALIGN_CENTER | Jimp.VERTICAL_ALIGN_MIDDLE;
 ```
-
-If you want to return a stream that combines *both* s1 and s2 to a single stream use
-[pumpify](https://github.com/mafintosh/pumpify) instead.
-
-## License
-
-MIT
-
-## Related
-
-`pump` is part of the [mississippi stream utility collection](https://github.com/maxogden/mississippi) which includes more useful stream modules similar to this one.
